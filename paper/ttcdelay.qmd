@@ -54,7 +54,7 @@ resources <- list_package_resources(package)
 ttc_data <- get_resource("2ee1a65c-da06-4ad1-bdfb-b1a57701e46a")
 
 # Save the dataset locally
-# write.csv(ttc_data, "data/raw_data/unedited_ttc_data.csv", row.names = FALSE)
+# write.csv(ttc_data, "../data/raw_data/unedited_ttc_data.csv", row.names = FALSE)
 
 head(ttc_data)
 ```
@@ -117,8 +117,7 @@ data_cleaned <- data_cleaned %>%
 
 # Standardize date and time
 data_cleaned <- data_cleaned %>%
-  mutate(date = as.Date(date, format = "%Y-%m-%d"),
-         time = as.POSIXct(time, format = "%H:%M"))
+  mutate(date = as.Date(date, format = "%Y-%m-%d"))
 
 # Remove missing delay codes
 data_cleaned <- data_cleaned %>% filter(code != "" & !is.na(code))
@@ -128,7 +127,7 @@ data_cleaned <- data_cleaned %>%
   filter(!is.na(station) & station != "" & !is.na(line) & line != "")
 
 # Save the dataset locally
-# write.csv(data_cleaned, "data/analysis_data/cleaned_ttc_data.csv", row.names = FALSE)
+# write.csv(data_cleaned, "../data/analysis_data/cleaned_ttc_data.csv", row.names = FALSE)
 ```
 
 ```{r}
@@ -142,7 +141,7 @@ data_cleaned <- data_cleaned %>%
 data_delay <- data_cleaned %>% filter(min_delay > 0)
 
 # Save the dataset locally
-# write.csv(data_delay, "data/analysis_data/cleaned_delay_data.csv", row.names = FALSE)
+# write.csv(data_delay, "../data/analysis_data/cleaned_delay_data.csv", row.names = FALSE)
 ```
 
 ```{r}
@@ -350,7 +349,7 @@ delay_frequency_by_hour <- data_delay %>%
 # Bar plot of Delay Frequency by Time of Day
 ggplot(delay_frequency_by_hour, aes(x = hour, y = delay_count)) +
   geom_bar(stat = "identity", fill = "salmon1", color = "black", alpha = 0.7) +
-  labs(title = "Delay Frequency by Time of Day (Filtered for Delays > 0)",
+  labs(title = "Delay Frequency by Time of Day",
        x = "Time of Day (Hour)",
        y = "Number of Delays") +
   theme_minimal() +
