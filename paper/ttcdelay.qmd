@@ -1,67 +1,48 @@
 ---
-title: "What’s Delaying Toronto’s Subways?"
-subtitle: "A Dive into Causes and Patterns: Uncovering the Trends Behind TTC Subway Delays"
+title: "What's Delaying Toronto's Subways?"
+subtitle: "Revealing Peak Hour Congestion, Infrastructure Failures, and High-traffic Hubs as Major Contributors"
 author: "Weiyang Li"
 thanks: "Code and data are available at: https://github.com/doravmony/TTC-Delay"
 date: today
 date-format: long
-abstract: "This paper explores the underlying patterns of subway delays in Toronto, revealing that subway delays are more frequent during peak hours and tend to be concentrated around major stations and high-demand subway lines. Notably, while most delays are brief, the data also highlights some extreme cases of disruptions lasting several hours. The analysis shows that facility failures and extreme weather can lead to longer delays. These insights suggest that targeted improvements to key stations and infrastructure can significantly reduce overall delay times and improve service reliability."
+abstract: "This paper explores the underlying patterns of subway delays in Toronto, finding that subway delays are more frequent during peak hours and tend to be concentrated around major stations and high-demand subway lines. Notably, while most delays are brief, the data also highlights some extreme cases of disruptions lasting several hours. The analysis shows that facility failures and extreme weather can lead to longer delays. Targeted improvements to key stations and infrastructure could significantly reduce overall delay times and improve service reliability."
 format: pdf
 number-sections: true
 bibliography: references.bib
 ---
-
-```{r, include=FALSE}
-library(tidyverse)
-
-
-#styler::style_file("script.R")
-#lintr::lint("script.R")
-```
-
-# Introduction {#sec-introduction}
-
-Urban public transportation systems are an important part of urban construction and development, connecting millions of commuters to their daily destinations and underpinning the vitality of city life. Compared to traditional bus systems, subway systems are emerging as one of the most efficient transportation networks, thanks to advantages such as shorter commute times across regions, relief from surface traffic, and independence from the weather. However, even in large cities like Toronto, subway systems, while an integral part of the daily commute, still face operational challenges, the most common of which are delays. Based on feedback from a random sample of 1,936 transit users surveyed by Forum Poll™, about one-third of TTC (Toronto Transit Commission) regulars report being dissatisfied with its service, with almost half of riders mentioning that they often experience unexpected delays while riding the TTC [@forum2019ttc].
-
-Recent analyses show that the TTC’s ridership recovery after the pandemic remains only at 70% of pre-pandemic levels, exacerbating financial strain and leading to increased delays, particularly during peak hours [@elliott2023ttc]. This "transportation death spiral" – reduced ridership leading to fewer resources and thus more delays – has placed the system in a critical state, threatening the reliability of the TTC network [@elliott2023ttc]. Therefore, an in-depth understanding of the causes and patterns of delays is important for improving service reliability. By identifying which factors cause more frequent or longer delays and whether certain stations or lines are more prone to disruptions, it is critical to target interventions. Urban transit managers can target operational improvements to reduce unnecessary delays and improve the overall passenger experience.
-
-Although previous research has identified commuter dissatisfaction and financial strain related to public transit delays [@elliott2023ttc], there has been little rigorous analysis to determine specific patterns in the duration and frequency of these delays. To address this gap, we conducted an in-depth analysis of the 2024 TTC subway delay dataset, focusing on delay trends at the station and line level, as well as across different dates. Through exploratory data analysis and visualization, our study examines which stations and lines experience the most delays, the times of day when issues are most severe, and the primary causes behind the longest service disruptions. Our findings reveal that certain stations and lines are disproportionately affected by delays, and that disruptions caused by mechanical failures tend to last significantly longer than those caused by other factors. These insights are crucial as they provide a foundation for policy changes, resource allocation, and targeted interventions to improve the reliability of TTC services.
-
-**In this paper, we analyze the 2024 TTC subway delay dataset, made publicly available through Open Data Toronto, to examine the frequency, duration, and causes of delays across various subway stations and lines. Our analysis investigates patterns based on factors such as time of day, location, and specific causes of delays. We also focus on identifying which stations or lines are more prone to disruptions and what factors contribute to longer or more frequent delays.** The remainder of the paper is structured as follows: @sec-data introduces the raw dataset and describes the cleaned datasets, along with a preliminary analysis through numerical summaries and visualizations. @sec-results explores key findings from our analysis. Lastly, @sec-discussion addresses the limitations of the analysis and offers recommendations for reducing delays and improving subway service reliability.
-
-# Data {#sec-data}
-
-## Raw Data {#sec-raw-data}
 
 ```{r}
 #| include: false
 #| warning: false
 #| message: false
 
-# Load data
-
-library(opendatatoronto)
-library(dplyr)
-library(readxl)
-
-# Get package
-package <- show_package("996cfe8d-fb35-40ce-b569-698d51fc683b")
-
-# List all resources
-resources <- list_package_resources(package)
+library(tidyverse)
 
 # Load the dataset
-ttc_data <- get_resource("2ee1a65c-da06-4ad1-bdfb-b1a57701e46a")
+data_cleaned <- read_csv(here::here("data/analysis_data/cleaned_ttc_data.csv"))
 
-# Save the dataset locally
-# write.csv(ttc_data, "../data/raw_data/unedited_ttc_data.csv", row.names = FALSE)
-
-head(ttc_data)
+data_delay <- read_csv(here::here("data/analysis_data/cleaned_delay_data.csv"))
 ```
 
-The dataset used for this analysis is the 2024 TTC Subway Delay Data, accessed from the Open Data Toronto portal and read into this paper via the opendatatoronto library [@citeopendatatoronto]. This dataset, released by the Toronto Transit Commission, comprehensively documents 17,517 subway delays in Toronto’s public transit system during the year 2024 [@ttc_delay_data]. Each entry in the dataset documents a delay event. Data is updated monthly and is as of August 31, 2024 for use in this paper. All the data analysis was conducted using R [@citeR] with the support of the following packages: tidyverse [@citetidyverse], dplyr [@citedplyr], readxl [@citereadxl], janitor [@citejanitor], ggplot2 [@citeggplot2], knitr [@citeknitr], kableExtra [@citekableExtra], and gridExtra [@citegridExtra].
+# Introduction {#sec-introduction}
 
-In the real world, subway delays are caused by a variety of operational or external factors, such as mechanical issues, weather conditions, or accidents. Each time a delay occurs, the TTC records detailed information, including the location, time, and cause of the delay. These recorded incidents are compiled into the TTC subway delay dataset, where each entry represents a specific delay event. In the data section, we trace this process—how real-world delays are documented, transformed into structured data, and ultimately used for our analysis. In this way, the TTC dataset is well suited for our analysis and specificity allows for a thorough analysis of Toronto's transportation challenges, whereas other datasets such as New York (MTA) or London (Underground) may not be as feasible. The essential details included in the dataset that allow for an in-depth examination of the temporal and spatial distribution of delays, as well as an exploration of the underlying causes contributing to service interruptions. The key variables are as follows:
+Urban public transportation systems are an important part of urban construction and development, connecting millions of commuters to their daily destinations and underpinning the vitality of city life. Compared to traditional bus systems, subway systems are emerging as one of the most efficient transportation networks, thanks to advantages such as shorter commute times across regions, relief from surface traffic, and independence from the weather. Yet, even in cities like Toronto, subway systems face frequent delays. Based on feedback from a random sample of 1,936 transit users surveyed by Forum Poll, about one-third of TTC (Toronto Transit Commission) regulars report being dissatisfied with its service, with almost half of riders mentioning that they often experience unexpected delays while riding the TTC [@forum2019ttc].
+
+Recent analyses show that the TTC's ridership recovery after the pandemic remains only at 70% of pre-pandemic levels, exacerbating financial strain and leading to increased delays, particularly during peak hours [@elliott2023ttc]. This "transportation death spiral" – reduced ridership leading to fewer resources and thus more delays – has placed the system in a critical state, threatening the reliability of the TTC network [@elliott2023ttc]. Therefore, an in-depth understanding of the causes and patterns of delays is important for improving service reliability. By determining which factors cause more frequent or longer delays, and whether certain stations or lines are more prone to disruptions, urban transit managers can target operational improvements to reduce unnecessary delays and improve the overall passenger experience
+
+Although previous research has identified commuter dissatisfaction and financial strain related to public transit delays [@elliott2023ttc], there has been little rigorous analysis to determine specific patterns in the duration and frequency of these delays. To address this gap, we conducted an in-depth analysis of the 2024 TTC subway delay dataset, focusing on delay trends at the station and line level, as well as across different dates. Through exploratory data analysis and visualization, our study examines which stations and lines experience the most delays, the times of day when issues are most severe, and the primary causes behind the longest service disruptions. Our findings reveal that transfer stations and high-traffic lines are disproportionately affected by delays, and that disruptions caused by mechanical failures tend to last significantly longer than those caused by other factors. These insights provide a foundation for policy changes, resource allocation, and targeted interventions to improve the reliability of TTC services.
+
+In this paper, we analyze the 2024 TTC subway delay dataset, made publicly available through Open Data Toronto, to examine the frequency, duration, and causes of delays across various subway stations and lines. Our analysis investigates patterns based on factors such as time of day, location, and specific causes of delays. We also focus on identifying which stations or lines are more prone to disruptions and what factors contribute to longer or more frequent delays.
+
+The remainder of the paper is structured as follows: @sec-data introduces the raw dataset and describes the cleaned datasets, along with a preliminary analysis through numerical summaries and visualizations. @sec-results explores key findings from our analysis. Lastly, @sec-discussion addresses the limitations of the analysis and offers recommendations for reducing delays and improving subway service reliability.
+
+# Data {#sec-data}
+
+## Raw Data {#sec-raw-data}
+
+The dataset used for this analysis is the 2024 TTC Subway Delay Data, accessed from the Open Data Toronto portal and read into this paper via the `opendatatoronto` library [@citeopendatatoronto]. This dataset, released by the Toronto Transit Commission, comprehensively documents 17,517 subway delays in Toronto’s public transit system during the year 2024 [@ttc_delay_data]. Each entry in the dataset documents a delay event. Data is updated monthly and is as of August 31, 2024 for use in this paper. All the data analysis was conducted using R [@citeR] with the support of the following packages: `tidyverse` [@citetidyverse], `readxl` [@citereadxl], `janitor` [@citejanitor], `knitr` [@citeknitr], `kableExtra` [@citekableExtra], and `gridExtra` [@citegridExtra].
+
+Subway delays stem from factors like mechanical failures, weather, or accidents. Each delay is logged by the TTC with details on location, time, and cause. This information forms the TTC subway delay dataset, where each entry is a specific event. In the data section, we track how real-world delays are recorded and transformed into structured data for analysis. In this way, the TTC dataset is well suited for our analysis and specificity allows for a thorough analysis of Toronto's transportation challenges, whereas other datasets such as New York (MTA) or London (Underground) may not be as feasible. The essential details included in the dataset that allow for an in-depth examination of the temporal and spatial distribution of delays, as well as an exploration of the underlying causes contributing to service interruptions. The key variables are as follows:
 
 ```{r}
 #| echo: false
@@ -95,54 +76,7 @@ kable(variable_description,
 
 ## Cleaned Data {#sec-cleaned-data}
 
-In this paper, we utilize two cleaned datasets for analysis. In the first dataset ([ttc dataset](https://github.com/doravmony/TTC-Subway-Delay/blob/main/data/analysis_data/cleaned_ttc_data.csv)), missing values in the station and line variables were removed, as the focus is on analyzing delays at specific stations and on particular lines. In the second dataset ([delay dataset](https://github.com/doravmony/TTC-Subway-Delay/blob/main/data/analysis_data/cleaned_delay_data.csv)), we retained only records with actual delays, ensuring that our analysis is centered on significant delay events. Detailed data cleaning is included in the [Appendix @sec-data-cleaning].
-
-```{r}
-#| include: false
-#| warning: false
-#| message: false
-
-# Data cleaning 1.0
-
-library(janitor)
-
-# Clean variable names 
-data_cleaned <- ttc_data %>% clean_names()
-
-# Standardize the text columns
-data_cleaned <- data_cleaned %>%
-  mutate(station = toupper(station),
-         bound = toupper(bound),
-         line = toupper(line))
-
-# Standardize date and time
-data_cleaned <- data_cleaned %>%
-  mutate(date = as.Date(date, format = "%Y-%m-%d"))
-
-# Remove missing delay codes
-data_cleaned <- data_cleaned %>% filter(code != "" & !is.na(code))
-
-# Remove missing station and line data
-data_cleaned <- data_cleaned %>%
-  filter(!is.na(station) & station != "" & !is.na(line) & line != "")
-
-# Save the dataset locally
-# write.csv(data_cleaned, "../data/analysis_data/cleaned_ttc_data.csv", row.names = FALSE)
-```
-
-```{r}
-#| include: false
-#| warning: false
-#| message: false
-
-# Data cleaning 2.0
-
-# Filter for rows where min_delay > 0
-data_delay <- data_cleaned %>% filter(min_delay > 0)
-
-# Save the dataset locally
-# write.csv(data_delay, "../data/analysis_data/cleaned_delay_data.csv", row.names = FALSE)
-```
+In this paper, we use two cleaned datasets for analysis. In the first dataset ([ttc dataset](https://github.com/doravmony/TTC-Delay/blob/main/data/analysis_data/cleaned_ttc_data.csv)), missing values in the station and line variables were removed, as the focus is on analyzing delays at specific stations and on particular lines. In the second dataset ([delay dataset](https://github.com/doravmony/TTC-Delay/blob/main/data/analysis_data/cleaned_delay_data.csv)), we retained only records with actual delays, ensuring that our analysis is centered on significant delay events. Detailed data cleaning is included in the [Appendix @sec-data-cleaning].
 
 ```{r}
 #| include: false
@@ -179,9 +113,9 @@ kable(summary_stats,
       col.names = c("Statistic", "Delay Duration", "Time Gap"))
 ```
 
-We analyzed the numerical summary using the cleaned TTC dataset containing complete records. The mean delay duration of 2.84 minutes suggests that subway delays are generally brief. Also, with a median of 0 minutes, more than half of the recorded events involved no actual delay. The third quartile value of 4 minutes indicates that 75% of the delays lasted less than 4 minutes, implying that longer delays are relatively uncommon. Most of the delays can therefore be considered minor. Furthermore, the standard deviation and variance reveal that the delays varied significantly, with many being short, some were considerably longer. Notably, we observed a maximum delay of 716 minutes, a substantial outlier. Upon closer inspection, it was determined that this outlier should not be discarded, as it resulted from an exceptional event rather than a data entry error.
+We analyzed the cleaned TTC dataset containing complete records, showing an average delay of 2.84 minutes, with most delays being brief. Over 50% of events had no delay (median = 0), and 75% lasted under 4 minutes. Although most delays were minor, some were significantly longer, including a 716-minute outlier from an exceptional event. Upon closer inspection, it was determined that this outlier should not be discarded, as it resulted from an exceptional event rather than a data entry error.
 
-The average gap between trains during delays is 4.20 minutes. Like the delay duration, the median gap is 0 minutes, indicating that most events in the record do not lead to significant gaps between trains. The maximum gap recorded is 719 minutes, representing an extreme case likely associated with rare or exceptional incidents causing major service disruptions. Notably, 75% of the gaps are under 8 minutes, suggesting that while delays do occur, they generally do not significantly disrupt the overall subway schedule.
+The average train gap during delays was 4.20 minutes, with a median gap of 0. Most gaps were under 8 minutes, indicating minimal disruption to the subway schedule. The maximum gap recorded is 719 minutes, an extreme case tied to rare incidents causing major disruptions. However, 75% of gaps are under 8 minutes, indicating that while delays happen, they rarely cause significant service interruptions.
 
 ## Exploratory Data Analysis {#sec-exploratory-data-analysis}
 
@@ -189,7 +123,7 @@ The average gap between trains during delays is 4.20 minutes. Like the delay dur
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-cap: Histogram of Delay Duration and Time Gap
+#| fig-cap: Delay Duration and Time Gap
 #| label: fig-histogram
 #| fig-align: "center"
 #| fig-pos: "H"
@@ -229,13 +163,13 @@ p2 <- ggplot(data_delay, aes(x = min_gap)) +
 grid.arrange(p1, p2, ncol = 1)
 ```
 
-The histograms (@fig-histogram) for delay duration and time gaps for actual delay dataset align with our analysis from the numerical summary (@fig-numerical). The vast majority of delays and time gaps are concentrated around very short durations, with most data points clustered near small values. Both distributions exhibit extreme outliers, resulting in long right tails that reflect rare but significant disruptions. While these outlier events are infrequent, their magnitude is substantial, as highlighted by the extended tails of the distributions.
+@fig-histogram for delay duration and time gaps for actual delay dataset align with our analysis from the @fig-numerical. The vast majority of delays and time gaps are concentrated around very short durations, with most data points clustered near small values. Both distributions exhibit extreme outliers, resulting in long right tails that reflect rare but significant disruptions. While these outlier events are infrequent, their magnitude is substantial, as highlighted by the extended tails of the distributions.
 
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-cap: Bar Plot of Delay Frequency by Day of the Week
+#| fig-cap: Delay Frequency by Day of the Week
 #| label: fig-barplot
 #| fig-width: 5
 #| fig-height: 3
@@ -262,26 +196,29 @@ ggplot(data_delay, aes(x = day)) +
   theme(axis.text.y = element_text(size = 8))
 ```
 
-The bar plot (@fig-barplot) illustrates the frequency of subway delays by day of the week, considering only delays where the duration exceeds zero. The data reveals that delays are most frequent on Tuesdays, followed closely by Fridays and Wednesdays, indicating a peak in delays during the middle of the workweek. In contrast, Sundays experience the fewest delays, likely due to reduced subway usage and service during weekends. Overall, the pattern suggests that the subway system experiences more frequent delays during weekdays, particularly in the middle of the week, when commuter traffic and operational demands are higher.
+@fig-barplot illustrates the frequency of subway delays by day of the week, considering only delays where the duration exceeds zero. The data reveals that delays are most frequent on Tuesdays, followed closely by Fridays and Wednesdays, indicating a peak in delays during the middle of the workweek. In contrast, Sundays experience the fewest delays, likely due to reduced subway usage and service during weekends. Overall, the pattern suggests that the subway system experiences more frequent delays during weekdays, particularly in the middle of the week, when commuter traffic and operational demands are higher.
 
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-cap: Scatter Plot between Delay Duration and Time Gap Between Subways
+#| fig-cap: Relationship between Delay Duration and Time Gap Between Subways
 #| label: fig-scatterplot
 #| fig-width: 5
 #| fig-height: 3
 #| fig-align: "center"
 #| fig-pos: "H"
 
+data_delay$logdelay <- log(data_delay$min_delay)
+data_delay$loggap <- log(data_delay$min_gap)
+  
 # Scatter plot for Delay Duration vs Time Gap
-ggplot(data_delay, aes(x = min_delay, y = min_gap)) +
+ggplot(data_delay, aes(x = logdelay, y = loggap)) +
   geom_point(alpha = 0.3, color = "palevioletred1") +
   geom_smooth(method = "lm", color = "slateblue2") +
   labs(title = "Delay Duration vs Time Gap Between Subways",
-       x = "Delay Duration (minutes)",
-       y = "Time Gap Between Subways (minutes)") +
+       x = "Log of Delay Duration (minutes)",
+       y = "Log of Time Gap (minutes)") +
   theme_minimal() +
   theme(axis.title.x=element_text(face="bold", hjust=0.5, vjust=0.5, size=10)) +
   theme(axis.title.y=element_text(face="bold", hjust=0.5, vjust=0.5, size=10)) +
@@ -290,7 +227,7 @@ ggplot(data_delay, aes(x = min_delay, y = min_gap)) +
   theme(axis.text.y = element_text(size = 8))
 ```
 
-The scatter plot (@fig-scatterplot) shows a clear positive linear relationship between delay duration and the time gap between subways. As the delay duration increases, the time gap between trains also rises proportionally. This strong correlation indicates that longer delays directly lead to larger gaps between subway services, likely causing significant disruptions. This relationship highlights the operational challenges of managing longer delays, as they not only prolong the delay duration but also increase the intervals between trains, contributing to greater service inefficiencies.
+@fig-scatterplot shows a strong positive linear relationship between the logarithm of delay duration and the logarithm of the time gap between subways. As the delay duration increases, the time gap between trains also rises proportionally. Longer delays directly lead to larger gaps between subway services, likely causing significant disruptions. This relationship highlights the operational challenges of managing longer delays, as they not only prolong the delay duration but also increase the intervals between trains, contributing to greater service inefficiencies.
 
 # Results {#sec-results}
 
@@ -300,7 +237,7 @@ The scatter plot (@fig-scatterplot) shows a clear positive linear relationship b
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-cap: Scatter Plot of Delay Duration and Time of Day
+#| fig-cap: Relationship between Delay Duration and Time of Day
 #| label: fig-scatterplot2
 #| fig-width: 5
 #| fig-height: 3
@@ -314,12 +251,12 @@ data_delay$hour <- format(as.POSIXct(data_delay$time, format="%H:%M"), "%H")
 data_delay$hour <- as.numeric(data_delay$hour)
 
 # Scatter plot of Delay Duration vs Time of Day
-ggplot(data_delay, aes(x = hour, y = min_delay)) +
+ggplot(data_delay, aes(x = hour, y = logdelay)) +
   geom_point(alpha = 0.3, color = "salmon") +
   geom_smooth(method = "loess", color = "olivedrab1") +
   labs(title = "Delay Duration vs Time of Day",
        x = "Time of Day (Hour)",
-       y = "Delay Duration (minutes)") +
+       y = "Log of Delay Duration (minutes)") +
   theme_minimal()  +
   theme(axis.title.x=element_text(face="bold", hjust=0.5, vjust=0.5, size=10)) +
   theme(axis.title.y=element_text(face="bold", hjust=0.5, vjust=0.5, size=10)) +
@@ -328,13 +265,13 @@ ggplot(data_delay, aes(x = hour, y = min_delay)) +
   theme(axis.text.y = element_text(size = 8))
 ```
 
-The scatter plot of delay duration versus time of day (@fig-scatterplot2) reveals that the majority of delays are clustered near zero, indicating that most recorded delays are relatively short and have minimal impact on service. These brief delays occur consistently throughout the day, with no significant variation during specific times, such as the morning or evening rush hours. However, the plot also highlights a few extreme outliers, where delay durations exceed 200 minutes, and in some cases, even 600 minutes. These outliers are scattered across different times of the day, suggesting that such long delays are likely caused by special or rare events, rather than being tied to a particular time of day.
+@fig-scatterplot2 reveals that the majority of delays are clustered near zero, indicating that most recorded delays are relatively short and have minimal impact on service. These brief delays occur consistently throughout the day, with no significant variation during specific times, such as the morning or evening rush hours. However, the plot also highlights a few extreme outliers, where delay durations exceed 200 minutes, and in some cases, even 600 minutes. These outliers are scattered across different times of the day, suggesting that such long delays are likely caused by special or rare events, rather than being tied to a particular time of day.
 
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-cap: Bar Plot of Delay Frequency by Time of Day
+#| fig-cap: Delay Frequency by Time of Day
 #| label: fig-barplot2
 #| fig-width: 5
 #| fig-height: 3
@@ -361,7 +298,7 @@ ggplot(delay_frequency_by_hour, aes(x = hour, y = delay_count)) +
   theme(axis.text.y = element_text(size = 8))
 ```
 
-The bar plot (@fig-barplot2) illustrates the frequency of delays across different hours of the day, filtered to include only events where the delay duration is greater than zero. The data reveal that delays are more common during certain periods of the day. Notably, there is a significant rise in delays during the morning hours between 7 AM and 10 AM, coinciding with the morning rush hour. Similarly, another peak is observed between 4 PM and 6 PM, which corresponds to the afternoon and early evening, potentially linked to the afternoon rush. Conversely, delays are less frequent during late-night and early morning hours (12 AM to 4 AM), when subway service is likely reduced. This pattern suggests that subway delays are more likely to occur during high-traffic periods of the day, aligning with expected increases in train frequency and passenger volume during rush hours. These findings indicate a clear temporal pattern in the occurrence of subway delays, which could be attributed to the increased operational pressure on the system during peak times.
+@fig-barplot2 illustrates the frequency of delays across different hours of the day, filtered to include only events where the delay duration is greater than zero. The data shows that delays are concentrated during the busiest times of the day. Delays spike significantly from 7 AM to 10 AM, aligning with the morning rush hour, and again between 4 PM and 6 PM during the afternoon rush. In contrast, delays drop off sharply late at night and early in the morning, particularly between 12 AM and 4 AM, likely when fewer trains are running. This highlights that delays are more common when the system is under greater pressure, coinciding with high commuter demand during peak hours.
 
 ## Do certain stations or lines experience more frequent delays? {#sec-do-certain-stations-or-lines-experience-more-frequent-delays}
 
@@ -369,10 +306,8 @@ The bar plot (@fig-barplot2) illustrates the frequency of delays across differen
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-cap: Bar plot for Delay Frequency by Top 20 Stations
+#| fig-cap: Delay Frequency by Top 20 Stations
 #| label: fig-barplot3
-#| fig-width: 5
-#| fig-height: 3
 #| fig-align: "center"
 #| fig-pos: "H"
 
@@ -406,13 +341,13 @@ ggplot(top_stations, aes(x = reorder(station, -n), y = n, fill = n)) +
         legend.key.size = unit(0.5, 'cm'))
 ```
 
-The bar plot (@fig-barplot3) shows the 20 subway stations with the most frequent delays. The data indicates that certain stations experience a significantly higher number of delays compared to others. Eglinton Station and Kennedy BD Station top the list, each with over 200 recorded delays. These stations are followed closely by Bloor Station, Finch Station, and Kipling Station, which all have more than 150 delays. The frequency of delays appears to be more concentrated in central and high-traffic stations, such as Union Station and St. George YUS Station, which serve as major transfer points for commuters. These findings suggest that stations along high-demand subway lines, particularly those that serve multiple routes or experience heavy passenger traffic, are more prone to frequent delays. It is likely that operational pressures, maintenance, or higher passenger volumes contribute to the higher number of delays at these locations.
+@fig-barplot3 highlights the 20 subway stations with the most frequent delays. Eglinton and Kennedy BD stations top the list with over 200 delays, followed by Bloor, Finch, and Kipling stations, each recording more than 150 delays. Eglinton Station faces frequent delays largely due to ongoing construction for the Eglinton Crosstown LRT project, which causes regular disruptions. Kennedy BD Station, on the other hand, is a major transfer hub connecting multiple subway and bus lines, which results in high passenger traffic and operational complexity. These factors create significant pressure on both stations, making them prone to delays. Furthermore, delays are more common in central, high-traffic stations such as Union and St. George YUS, which are major transfer hubs. This suggests that stations serving multiple lines or facing heavy passenger flow are more prone to delays, likely due to operational challenges, maintenance, or increased passenger demand.
 
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-cap: Bar plot for Delay Frequency by Lines
+#| fig-cap: Delay Frequency by Lines
 #| label: fig-barplot4
 #| fig-width: 5
 #| fig-height: 3
@@ -445,7 +380,7 @@ ggplot(line_delay_freq, aes(x = reorder(line, -n), y = n, fill = n)) +
         legend.key.size = unit(0.5, 'cm'))
 ```
 
-The bar plot (@fig-barplot4) illustrates the delay frequency across different subway lines. The YU (Yonge-University) line experiences the highest number of delays, with nearly 4,000 recorded instances. This is followed by the BD (Bloor-Danforth) line, which also has a significant number of delays, close to 3,000. This distribution highlights that the most heavily used lines, particularly the YU and BD lines, tend to experience more frequent delays, likely due to their higher passenger volume and operational load. These lines serve as the backbone of the Toronto subway system, connecting major hubs and handling a significant proportion of daily commuters.
+@fig-barplot4 illustrates the delay frequency across different subway lines. The YU (Yonge-University) line experiences the highest number of delays, with nearly 4,000 recorded instances. This is followed by the BD (Bloor-Danforth) line, which also has a significant number of delays, close to 3,000. This distribution highlights that the most heavily used lines, particularly the YU and BD lines, tend to experience more frequent delays, likely due to their higher passenger volume and operational load. These lines serve as the backbone of the Toronto subway system, connecting major hubs and handling a significant proportion of daily commuters.
 
 ## Do certain delay causes lead to longer delays than others? {#sec-do-certain-delay-causes-lead-to-longer-delays-than-others}
 
@@ -455,8 +390,6 @@ The bar plot (@fig-barplot4) illustrates the delay frequency across different su
 #| message: false
 #| fig-cap: Top 10 Longest and Top 10 Shortest Delay Causes by Average Duration
 #| label: fig-barplot5
-#| fig-width: 5
-#| fig-height: 3
 #| fig-align: "center"
 #| fig-pos: "H"
 
@@ -477,24 +410,29 @@ top_10_shortest <- delay_cause_duration %>%
 plot_longest <- ggplot(top_10_longest, aes(x = reorder(code, avg_delay), 
                                            y = avg_delay, fill = avg_delay)) +
   geom_bar(stat = "identity", color = "black") +
-  scale_fill_gradient(low = "lightcoral", high = "darkred") +
+  scale_fill_gradient(low = "lightcoral", high = "darkred", name = "Average Delay Time") +
   coord_flip() +
   labs(title = "Top 10 Longest Delay",
        x = "Delay Cause",
-       y = "Average Delay Duration (minutes)") +
+       y = "Average Delay Duration (minutes)",
+       fill = "Average Delay Time") +
   theme_minimal() +
   theme(panel.grid = element_blank()) +
   theme(axis.title.x=element_text(face="bold", hjust=0.5, vjust=0.5, size=10)) +
   theme(axis.title.y=element_text(face="bold", hjust=0.5, vjust=0.5, size=10)) +
   theme(plot.title=element_text(size=12, face="bold", hjust=0.5, vjust=1)) +
   theme(axis.text.x = element_text(size = 8)) +
-  theme(axis.text.y = element_text(size = 8))
+  theme(axis.text.y = element_text(size = 8)) +
+  theme(legend.title = element_text(size = 8),
+        legend.text = element_text(size = 6),
+        legend.key.size = unit(0.5, 'cm')) +
+  theme(legend.position='bottom')
 
 # Plot for top 10 shortest delay causes
 plot_shortest <- ggplot(top_10_shortest, aes(x = reorder(code, -avg_delay), 
                                              y = avg_delay, fill = avg_delay)) +
   geom_bar(stat = "identity", color = "black") +
-  scale_fill_gradient(low = "pink", high = "plum2") +
+  scale_fill_gradient(low = "white", high = "pink", name = "Average Delay Time") +
   coord_flip() +
   labs(title = "Top 10 Shortest Delay",
        x = "Delay Cause",
@@ -505,16 +443,20 @@ plot_shortest <- ggplot(top_10_shortest, aes(x = reorder(code, -avg_delay),
   theme(axis.title.y=element_text(face="bold", hjust=0.5, vjust=0.5, size=10)) +
   theme(plot.title=element_text(size=12, face="bold", hjust=0.5, vjust=1)) +
   theme(axis.text.x = element_text(size = 8)) +
-  theme(axis.text.y = element_text(size = 8))
+  theme(axis.text.y = element_text(size = 8)) +
+  theme(legend.title = element_text(size = 8),
+        legend.text = element_text(size = 6),
+        legend.key.size = unit(0.5, 'cm')) +
+  theme(legend.position='bottom')
 
 # Display both plots
 grid.arrange(plot_longest, plot_shortest, ncol = 2)
 
 ```
 
-The two bar plots (@fig-barplot5) present the top 10 causes of the longest and shortest delays, highlighting significant variations in the impact of different delay causes on service duration. On the left, the Top 10 Longest Delay Causes plot shows that the PUTSM (Track Switch Failure) cause leads to the longest average delay, with an average delay duration of over 125 minutes. Track switch failures are critical infrastructure issues that directly affect the movement of trains, often requiring technical teams and considerable time to repair. Other notable causes include MUPR1 (Train in Contact With Person), which involves serious incidents requiring emergency response and safety protocols, and MUWEA (Weather Reports), where extreme weather conditions, such as snow or storms, disrupt service significantly. Both of these causes result in substantial delays, exceeding 75 minutes on average, due to the severity and complexity of resolving these issues, which often involve external factors and safety measures. These incidents require extensive coordination, leading to prolonged interruptions in service. On the right, the Top 10 Shortest Delay Causes plot demonstrates that the shortest delays are associated with causes such as PUCSS (Central Office Signalling System) and EUOPO (Non-Train Door Monitoring), with average delay durations of only about 3 to 4 minutes. These issues may be less severe, or more easily resolved, leading to minimal disruption in subway operations.
+@fig-barplot5 presents the top 10 causes of both the longest and shortest subway delays, revealing the wide range of impacts that different issues can have on service. (Note: the detailed explanations for each delay cause code are provided in the [codebook](https://github.com/doravmony/TTC-Delay/blob/main/data/code_book/ttc-subway-delay-codes.xlsx).) The longest delays, led by PUTSM (Track Switch Failure), with an average delay over 125 minutes, stem from critical infrastructure problems requiring complex repairs. Other major causes, like MUPR1 (Train in Contact with Person) and MUWEA (Weather Events), also lead to significant delays due to safety protocols or external weather conditions. These delays often involve multiple teams and external coordination, extending the service interruptions.
 
-Overall, the data indicate that certain delay causes, particularly those related to significant operational issues, result in much longer service interruptions, while other, less impactful causes are resolved more quickly. This distinction is crucial for prioritizing resources and interventions, as addressing the root causes of the most prolonged delays could significantly improve overall system efficiency.
+On the other hand, the shortest delays are related to less severe issues like PUCSS (Central Office Signaling System) and EUOPO (Non-Train Door Monitoring), which average only 3 to 4 minutes. These minor problems can be resolved quickly, causing minimal disruption to subway operations. This contrast highlights the importance of addressing critical operational failures to minimize lengthy delays, while the more frequent short delays require efficient management to keep subway services running smoothly.
 
 # Discussion {#sec-discussion}
 
