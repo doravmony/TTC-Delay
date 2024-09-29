@@ -13,4 +13,4 @@ The file is structured as:
 
 ## Statement on LLM usage
 
-The abstract, introduction and discussion were written with the help of ChatGPT, Grammarly and DeepL. The entire chat history is available in other/llms/usage.txt.
+The abstract, introduction and discussion were written with the help of ChatGPT, Grammarly and DeepL. The entire chat history is available in `other/llms/usage.txt`.
